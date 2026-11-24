@@ -1,0 +1,96 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@theme {
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-surface-primary: var(--color-surface-primary);
+  --color-surface-secondary: var(--color-surface-secondary);
+  --color-surface-tertiary: var(--color-surface-tertiary);
+  --color-surface-elevated: var(--color-surface-elevated);
+  --color-surface-inverse: var(--color-surface-inverse);
+
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-inverse: var(--color-text-inverse);
+
+  --color-border-subtle: var(--color-border-subtle);
+  --color-border-strong: var(--color-border-strong);
+  --color-focus-ring: var(--color-focus-ring);
+
+  --color-action-primary-bg: var(--color-action-primary-bg);
+  --color-action-primary-hover: var(--color-action-primary-hover);
+  --color-action-primary-fg: var(--color-action-primary-fg);
+
+  --color-action-secondary-bg: var(--color-action-secondary-bg);
+  --color-action-secondary-hover: var(--color-action-secondary-hover);
+  --color-action-secondary-fg: var(--color-action-secondary-fg);
+
+  --color-status-success-bg: var(--color-status-success-bg);
+  --color-status-success-border: var(--color-status-success-border);
+  --color-status-success-fg: var(--color-status-success-fg);
+
+  --color-status-warning-bg: var(--color-status-warning-bg);
+  --color-status-warning-border: var(--color-status-warning-border);
+  --color-status-warning-fg: var(--color-status-warning-fg);
+
+  --color-status-danger-bg: var(--color-status-danger-bg);
+  --color-status-danger-border: var(--color-status-danger-border);
+  --color-status-danger-fg: var(--color-status-danger-fg);
+
+  --color-status-info-bg: var(--color-status-info-bg);
+  --color-status-info-border: var(--color-status-info-border);
+  --color-status-info-fg: var(--color-status-info-fg);
+
+  --color-accent-primary: var(--color-accent-primary);
+  --color-text-tertiary: var(--color-text-tertiary);
+  --color-border-default: var(--color-border-default);
+  --color-status-error-bg: var(--color-status-error-bg);
+  --color-status-error-border: var(--color-status-error-border);
+  --color-status-error-fg: var(--color-status-error-fg);
+
+  --radius-sm: var(--primitive-radius-sm);
+  --radius-md: var(--primitive-radius-md);
+  --radius-lg: var(--primitive-radius-lg);
+  --radius-full: var(--primitive-radius-full);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background-color: var(--color-background);
+  background-image:
+    radial-gradient(ellipse 65% 50% at 0% 0%, rgba(112, 120, 244, 0.14), transparent 60%),
+    radial-gradient(ellipse 50% 45% at 100% 10%, rgba(139, 147, 248, 0.08), transparent 55%);
+  background-attachment: fixed;
+  color: var(--color-text-primary);
+  font-family: var(--primitive-font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* High-visibility 3:1 focus ring on all interactive controls */
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Compositor-only transitions disabled under prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
