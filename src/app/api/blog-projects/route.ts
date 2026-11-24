@@ -35,6 +35,31 @@ import type {
   Brand,
 } from "@/types/domain";
 
+function compactVersionHistory(
+  existingVersions: BlogArticleVersion[],
+  newVersion: BlogArticleVersion
+): BlogArticleVersion[] {
+  const combined = [...existingVersions, newVersion];
+  const sliced = combined.slice(-10);
+  return sliced.map((v, idx) => {
+    if (
+      idx < sliced.length - 2 &&
+      v.content?.featuredImageUrl &&
+      v.content.featuredImageUrl.length > 50000
+    ) {
+      return {
+        ...v,
+        content: {
+          ...v.content,
+          featuredImageUrl:
+            v.content.featuredImageUrl.slice(0, 300) + "...[historical preview]",
+        },
+      };
+    }
+    return v;
+  });
+}
+
 function ensureWorkspaceBrand(workspaceId: string, preferredBrandId?: string): Brand {
   if (preferredBrandId) {
     const existing = getBrandById(workspaceId, preferredBrandId);
@@ -466,7 +491,7 @@ export async function POST(req: NextRequest) {
 
       const updated = updateBlogProject(wsId, projectId, {
         currentArticle: article,
-        versions: [...project.versions, newVersion],
+        versions: compactVersionHistory(project.versions, newVersion),
         status: "article_ready",
         hasApprovedUserEdits: false,
       });
@@ -520,7 +545,7 @@ export async function POST(req: NextRequest) {
         topic: nextArticle.blogTitle || project.topic,
         keywords: nextKeywords,
         currentArticle: nextArticle,
-        versions: [...project.versions, newVersion],
+        versions: compactVersionHistory(project.versions, newVersion),
         status: approveArticle ? "approved" : project.status,
         hasApprovedUserEdits: true,
       });
@@ -592,7 +617,7 @@ export async function POST(req: NextRequest) {
       const updated = updateBlogProject(wsId, projectId, {
         writingTone: targetTone || project.writingTone,
         currentArticle: nextArticle,
-        versions: [...project.versions, newVersion],
+        versions: compactVersionHistory(project.versions, newVersion),
         hasApprovedUserEdits: true,
       });
 
@@ -710,7 +735,7 @@ export async function POST(req: NextRequest) {
         imageWidth: width,
         imageHeight: height,
         currentArticle: nextArticle,
-        versions: [...project.versions, newVersion],
+        versions: compactVersionHistory(project.versions, newVersion),
         hasApprovedUserEdits: true,
       });
 
@@ -810,7 +835,7 @@ export async function POST(req: NextRequest) {
 
       const updated = updateBlogProject(wsId, projectId, {
         currentArticle: targetVersion.content,
-        versions: [...project.versions, restoredVersion],
+        versions: compactVersionHistory(project.versions, restoredVersion),
       });
 
       return NextResponse.json({ project: updated });

@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
 
 let dbInstance: DatabaseSync | null = null;
 let currentDbPath: string | null = null;
@@ -8,11 +9,47 @@ let initializedSchemaRevision = 0;
 const CURRENT_SCHEMA_REVISION = 3;
 
 export function getStorageRoot(): string {
-  const customRoot = process.env.STUDIO_STORAGE_DIR;
-  if (customRoot) {
-    return path.resolve(customRoot);
+  if (process.env.STUDIO_STORAGE_DIR) {
+    const custom = path.resolve(process.env.STUDIO_STORAGE_DIR);
+    try {
+      fs.mkdirSync(custom, { recursive: true });
+      return custom;
+    } catch {
+      // Fall through if custom directory is not writable
+    }
   }
-  return path.join(process.cwd(), "storage");
+
+  // Detect serverless / read-only hosting environments (e.g. Vercel, AWS Lambda, Netlify)
+  const isServerless =
+    Boolean(process.env.VERCEL) ||
+    Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME) ||
+    Boolean(process.env.LAMBDA_TASK_ROOT) ||
+    Boolean(process.env.NETLIFY) ||
+    process.cwd().startsWith("/var/task");
+
+  if (isServerless) {
+    const serverlessDir = path.join(os.tmpdir(), "social-studio-storage");
+    try {
+      fs.mkdirSync(serverlessDir, { recursive: true });
+    } catch {
+      // Directory already exists or created by previous invocation
+    }
+    return serverlessDir;
+  }
+
+  // Standard container, VPS, or local development
+  const localDir = path.join(process.cwd(), "storage");
+  try {
+    fs.mkdirSync(localDir, { recursive: true });
+    return localDir;
+  } catch {
+    // If process.cwd() is read-only, safely fall back to os.tmpdir()
+    const fallbackDir = path.join(os.tmpdir(), "social-studio-storage");
+    try {
+      fs.mkdirSync(fallbackDir, { recursive: true });
+    } catch {}
+    return fallbackDir;
+  }
 }
 
 export function ensureWorkspaceStorageDir(workspaceId: string, subDir = ""): string {
@@ -549,7 +586,23 @@ export function getDb(customPath?: string): DatabaseSync {
   }
 
   if (resolvedPath !== ":memory:") {
-    fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
+    const dir = path.dirname(resolvedPath);
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch {
+      // Ignore if directory exists
+    }
+
+    // In serverless environments, if a seed database exists in the deployment bundle
+    // and resolvedPath is in /tmp, copy the seed database to /tmp if not already present
+    const bundleSeedPath = path.join(process.cwd(), "storage", "social-media-studio.db");
+    if (resolvedPath !== bundleSeedPath && fs.existsSync(bundleSeedPath) && !fs.existsSync(resolvedPath)) {
+      try {
+        fs.copyFileSync(bundleSeedPath, resolvedPath);
+      } catch {
+        // Fall back to creating fresh database in resolvedPath
+      }
+    }
   }
 
   dbInstance = new DatabaseSync(resolvedPath);
